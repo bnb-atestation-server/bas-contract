@@ -3,6 +3,7 @@ import { ExecutorMsg } from '@bnb-chain/bsc-cross-greenfield-sdk';
 import { Policy } from '@bnb-chain/greenfield-cosmos-types/greenfield/permission/types';
 import { Client } from '@bnb-chain/greenfield-js-sdk';
 import { ResourceType } from '@bnb-chain/greenfield-cosmos-types/greenfield/resource/types';
+import {StatementStruct,PrincipalStruct,PolicyStruct} from "../../typechain-types/contracts/bucket/Common"
 import {BucketRegistry__factory} from  "../../typechain-types/factories/contracts/bucket";
 import {BucketFactory__factory} from  "../../typechain-types/factories/contracts/bucket/BucketFactory.sol";
 import {BucketManager__factory} from  "../../typechain-types/factories/contracts/bucket/BucketManager.sol";
@@ -27,7 +28,17 @@ async function deployRegistry() {
     return addr
 }
 
-async function deployFactory(bucketRegistry: string) {
+async function deployUtilsLib() {
+    const [signer] = await ethers.getSigners();
+    const Policy =  await ethers.getContractFactory("Policys",signer);
+    const policy = await Policy.deploy()
+    await policy.waitForDeployment()
+    const addr = await policy.getAddress()
+    console.log("policy lib address:",addr)
+    return addr
+}
+
+async function deployFactory(bucketRegistry: string, policyAddr:string) {
     const TOKEN_HUB = "0xED8e5C546F84442219A5a987EE1D820698528E04";
     const CROSS_CHAIN = "0xa5B2c9194131A4E0BFaCbF9E5D6722c873159cb7";
     const BUCKET_HUB = "0x5BB17A87D03620b313C39C24029C94cB5714814A";
@@ -41,6 +52,13 @@ async function deployFactory(bucketRegistry: string) {
 
 
     const [signer] = await ethers.getSigners();
+    // const Factory =  await ethers.getContractFactory("BucketFactory",{
+    //     signer,
+    //     libraries:{
+    //         Policys: policyAddr,
+    //     }
+    // });
+
     const Factory =  await ethers.getContractFactory("BucketFactory",signer);
 
     const factory = await upgrades.deployProxy(Factory,[
@@ -278,6 +296,36 @@ async function createSchemaPolicy(_bucketManager: string ,eoa : string, name: st
     );
 }
 
+async function createUserPolicyInContract(_bucketManager: string, policy: PolicyStruct) {
+    const [signer] = await ethers.getSigners();
+    const bucketManager = BucketManager__factory.connect(_bucketManager, signer)
+
+    const GRPC_URL = 'https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org';
+    const GREEN_CHAIN_ID = 'greenfield_5600-1';
+    const client = Client.create(GRPC_URL, GREEN_CHAIN_ID);
+     
+    const bucketName = await bucketManager.getName("",ZERO_BYTES32);
+    const bucketInfo = await client.bucket.getBucketMeta({ bucketName });
+    const bucketId = bucketInfo.body!.GfSpGetBucketMetaResponse.Bucket.BucketInfo.Id;
+
+    policy.resource_id = bucketId;
+
+    const CROSS_CHAIN = await bucketManager.cross_chain();
+    const crossChain = (await ethers.getContractAt('ICrossChain', CROSS_CHAIN));
+
+    const [relayFee, ackRelayFee] = await crossChain.getRelayFees();
+    const gasPrice =  10000000000n;
+    const callbackGasLimit = await bucketManager.callbackGasLimit();
+
+    const userValue = relayFee + ackRelayFee + callbackGasLimit * gasPrice
+
+    const resp = await bucketManager.testCreateUserPolicy(policy, { value: userValue});
+    console.log(`https://testnet.bscscan.com/tx/${resp?.hash}`);
+    console.log(
+        `policy set success, ${policy.principal.value} could create object ${bucketName} (id: ${bucketId}) now on Greenfield`
+    );
+}
+
 
 async function sleep(seconds: number) {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
@@ -295,10 +343,12 @@ async function getControlledManagers(_registry: string) {
 }
 
 async function main() {
-    const registry = await deployRegistry()
-    // const registry = "0x124669dA1546307851d9AdB0aF139e9678a82282"
+    // const registry = await deployRegistry()
+    const registry = "0x501B042B96054E3F0A79C22e1D83fb0E267aFdD4"
 
-    const factory = await deployFactory(registry)
+    // const policyLib = await deployUtilsLib()
+
+    const factory = await deployFactory(registry,"")
     // const factory = "0x59B6A989a7c09Df1942E486aa2526C0334ab940f"
 
     await setFactoryAddressForRegistry(registry,factory)
@@ -306,15 +356,47 @@ async function main() {
 
     const manager = await deployBucketManager(factory,salt)
 
-    await getControlledManagers(registry)
+    // await getControlledManagers(registry)
     // const manager = "0x65061Ba378351809d6dBFdB33eFD50FF43C3E2Ac"
 
     // const schemaId = "0xacc308075dabd756f3806f0f2a0d919d12b13597ba4791de96283aa646c2c5b5";
     // const name = "thdsssrr"
-    // const eoa = "0xF7a381D4c5753775757D3445aBdc2cdFCA1b5BB4"    
+    // const eoa = "0xF7a381D4c5753775757D3445aBdc2cdFCA1b5BB4" 
+    
 
     // await createUserBucket(manager)
     // await createUserPolicy(manager,eoa)
+
+    const principal: PrincipalStruct =  {
+        principal_type:1,
+        value: "0x65061Ba378351809d6dBFdB33eFD50FF43C3E2Ac"
+    }
+
+    const statement:StatementStruct = {
+        effect: Effect.EFFECT_ALLOW,
+        actions: [
+            ActionType.ACTION_CREATE_OBJECT
+        ], 
+        resources: [],
+        expiration_time: {
+            _seconds:0,
+            nanos:0
+        },
+        limit_size: {value:0}
+    }
+    
+    const policy:PolicyStruct = {
+        id: "0",
+        resource_id: "127", 
+        resource_type: ResourceType.RESOURCE_TYPE_BUCKET,
+        statements: [statement],
+        principal: principal,
+        expiration_time: {
+            _seconds:0,
+            nanos:0
+        }
+    }
+    // await createUserPolicyInContract(manager,policy)
 
     // await createSchemaBucket(manager,name,schemaId)
     // await createSchemaPolicy(manager,eoa,name,schemaId)

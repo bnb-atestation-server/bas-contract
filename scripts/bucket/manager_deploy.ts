@@ -10,8 +10,6 @@ import {
  } from '@bnb-chain/greenfield-cosmos-types/greenfield/permission/common';
 
 
-
-
 async function deploy() {
     const TOKEN_HUB = "0xED8e5C546F84442219A5a987EE1D820698528E04";
     const CROSS_CHAIN = "0xa5B2c9194131A4E0BFaCbF9E5D6722c873159cb7";
@@ -103,7 +101,6 @@ async function deploy() {
    const provider =  hardhat.provider
    console.log(provider.estimateGas(resp))
 }
-
 
 
 

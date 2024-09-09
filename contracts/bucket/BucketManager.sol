@@ -8,7 +8,9 @@ import "@bnb-chain/greenfield-contracts/contracts/interface/ICrossChain.sol";
 import "@bnb-chain/greenfield-contracts/contracts/interface/IPermissionHub.sol";
 import "@bnb-chain/greenfield-contracts/contracts/interface/IGreenfieldExecutor.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "@openzeppelin/contracts/utils/Strings.sol"; 
+import "@openzeppelin/contracts/utils/Strings.sol";
+
+import "./Utils.sol";
 // 引入 OpenZeppelin 的 Strings 库
 
 
@@ -253,7 +255,7 @@ contract BucketManager is Ownable {
     function createUserPolicy(bytes calldata createPolicyData)  external payable onlyOwner{
         return _createUserPolicy(createPolicyData,callbackGasLimit, failureHandleStrategy);
     }
-    function _createUserPolicy(bytes calldata createPolicyData,uint256 _callbackGasLimit,PackageQueue.FailureHandleStrategy _failureHandleStrategy) internal {
+    function _createUserPolicy(bytes memory createPolicyData,uint256 _callbackGasLimit,PackageQueue.FailureHandleStrategy _failureHandleStrategy) internal {
         require (basBucket == Status.Success, "The bucket of this contract is not created");
         _createPolicy("",bytes32(0),createPolicyData,_callbackGasLimit,_failureHandleStrategy);
     }
@@ -261,7 +263,7 @@ contract BucketManager is Ownable {
     function _createPolicy(
         string memory name,
         bytes32 schemaId,
-        bytes calldata createPolicyData,
+        bytes memory createPolicyData,
         uint256 _callbackGasLimit,
         PackageQueue.FailureHandleStrategy _failureHandleStrategy
         ) internal {
@@ -419,5 +421,10 @@ contract BucketManager is Ownable {
 
     function getPolicyStatus(bytes32 _msgDataHash)public view returns(Status) {
         return policies[_msgDataHash];
+    }
+
+     function testCreateUserPolicy(Policys.Policy memory policy)  external payable onlyOwner{
+        bytes memory createPolicyData = Policys.encodePolicy(policy);
+        return _createUserPolicy(createPolicyData,callbackGasLimit, failureHandleStrategy);
     }
 }

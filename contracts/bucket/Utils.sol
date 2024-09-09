@@ -38,40 +38,42 @@ struct Timestamp {
     int32 nanos;
 }
 
-struct Policy {
-    string id;
-    Principal principal;
-    int32 resource_type;
-    string resource_id;
-    Statement[] statements;
-    Timestamp expiration_time;
-}
-
-struct Principal {
-    int32 principal_type;
-    string value;
-}
-
-struct Statement {
-    int32 effect;
-    int32[] actions;
-    string[] resources;
-    Timestamp expiration_time;
-    UInt64Value limit_size;
-}
-
 struct UInt64Value {
     uint64 value;
 }
 
 
+int32 constant VISIBILITY_TYPE_UNSPECIFIED = 0;
+int32 constant   VISIBILITY_TYPE_PUBLIC_READ = 1;
+int32 constant   VISIBILITY_TYPE_PRIVATE = 2;
+int32 constant   VISIBILITY_TYPE_INHERIT = 3;
+int32 constant  UNRECOGNIZED = -1;
 
-contract Common {
-    constructor(){
 
+library Policys {
+    struct Policy {
+        string id;
+        Principal principal;
+        int32 resource_type;
+        string resource_id;
+        Statement[] statements;
+        Timestamp expiration_time;
     }
 
-    function encodePrinciple(Principal memory principal)public pure returns (bytes memory) {
+    struct Principal {
+        int32 principal_type;
+        string value;
+    }
+
+    struct Statement {
+        int32 effect;
+        int32[] actions;
+        string[] resources;
+        Timestamp expiration_time;
+        UInt64Value limit_size;
+    }
+
+    function encodePrinciple(Principal memory principal)internal pure returns (bytes memory) {
         bytes memory result;
         if (principal.principal_type != 0) {
             result = abi.encodePacked(ProtobufLib.encode_uint32(8),ProtobufLib.encode_int32(principal.principal_type));
@@ -83,7 +85,7 @@ contract Common {
         return result;
         }   
 
-    function encodeStatement(Statement memory statement)public pure returns (bytes memory) {
+    function encodeStatement(Statement memory statement)internal pure returns (bytes memory) {
         bytes memory result;
         if (statement.effect != 0) {
             result = abi.encodePacked(ProtobufLib.encode_uint32(8),ProtobufLib.encode_int32(statement.effect));
@@ -120,7 +122,7 @@ contract Common {
         return result; 
     }
 
-    function encodePolicy(Policy memory policy) public pure returns (bytes memory) {
+    function encodePolicy(Policy memory policy) internal pure returns (bytes memory) {
         bytes memory result;
         if (!Strings.equal("",policy.id)) {
             result = abi.encodePacked(ProtobufLib.encode_uint32(10),ProtobufLib.encode_string(policy.id));
@@ -139,8 +141,6 @@ contract Common {
             result = abi.encodePacked(result,ProtobufLib.encode_uint32(34),ProtobufLib.encode_string(policy.resource_id));
         }
 
-
-
         for (uint i = 0;i<policy.statements.length;i++) {
             bytes memory statementsBytes = encodeStatement(policy.statements[i]);
             result = abi.encodePacked(result,ProtobufLib.encode_uint32(42),ProtobufLib.encode_uint32(uint32(statementsBytes.length)),statementsBytes);
@@ -151,6 +151,100 @@ contract Common {
             result = abi.encodePacked(result,ProtobufLib.encode_uint32(50),ProtobufLib.encode_uint32(uint32(secondBytes.length)),secondBytes);
         }
     
+        return result;
+    }
+}
+
+library Executor {
+    struct MsgSetBucketFlowRateLimit{
+        string operator;
+        string bucketName;
+        string bucketOwner;
+        string paymentAddress;
+        string flowRateLimit;
+    }
+
+    struct MsgUpdateBucketInfo {
+        string operator;
+        string bucketName;
+        UInt64Value chargedReadQuota;
+        string paymentAddress;
+        int32 visibility;       
+    }
+
+    struct MsgUpdateObjectInfo {
+        string operator;
+        string bucketName;
+        string objectName;
+        int32 visibility;       
+    }
+
+    function encodeMsgSetBucketFlowRateLimit(MsgSetBucketFlowRateLimit memory _msg) internal pure returns (bytes memory) {
+        bytes memory result;
+        if (!Strings.equal(_msg.operator, "")) {
+            result = abi.encodePacked(ProtobufLib.encode_uint32(10),ProtobufLib.encode_string(_msg.operator));
+        }
+
+        if (!Strings.equal(_msg.bucketName,"")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(18),ProtobufLib.encode_string(_msg.bucketName));
+        }
+
+        if (!Strings.equal(_msg.bucketOwner,"")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(26),ProtobufLib.encode_string(_msg.bucketOwner));
+        }
+
+        if (!Strings.equal(_msg.paymentAddress, "")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(34),ProtobufLib.encode_string(_msg.paymentAddress));
+        }
+
+        if (!Strings.equal(_msg.flowRateLimit, "")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(42),ProtobufLib.encode_string(_msg.flowRateLimit));
+        }
+        return result;
+
+    }
+    function encodeMsgUpdateObjectInfo(MsgUpdateObjectInfo memory _msg) internal pure returns (bytes memory) {
+        bytes memory result;
+        if (!Strings.equal(_msg.operator, "")) {
+            result = abi.encodePacked(ProtobufLib.encode_uint32(10),ProtobufLib.encode_string(_msg.operator));
+        }
+
+        if (!Strings.equal(_msg.bucketName,"")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(18),ProtobufLib.encode_string(_msg.bucketName));
+        }
+
+        if (!Strings.equal(_msg.objectName,"")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(26),ProtobufLib.encode_string(_msg.objectName));
+        }
+
+        if (_msg.visibility != 0) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(32),ProtobufLib.encode_int32(_msg.visibility));
+        }
+        return result;
+    }
+
+    function encodeMsgUpdateBucketInfo(MsgUpdateBucketInfo memory _msg) internal pure returns (bytes memory) {
+        bytes memory result;
+        if (!Strings.equal(_msg.operator, "")) {
+            result = abi.encodePacked(ProtobufLib.encode_uint32(10),ProtobufLib.encode_string(_msg.operator));
+        }
+
+        if (!Strings.equal(_msg.bucketName,"")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(18),ProtobufLib.encode_string(_msg.bucketName));
+        }
+
+        if (_msg.chargedReadQuota.value != 0) {
+             bytes memory valueBytes = abi.encodePacked(ProtobufLib.encode_uint32(8),ProtobufLib.encode_uint64(_msg.chargedReadQuota.value));
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(26),ProtobufLib.encode_uint32(uint32(valueBytes.length)),valueBytes);
+        }
+
+        if (!Strings.equal(_msg.paymentAddress, "")) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(34),ProtobufLib.encode_string(_msg.paymentAddress));
+        }
+
+        if (_msg.visibility != 0) {
+            result = abi.encodePacked(result,ProtobufLib.encode_uint32(40),ProtobufLib.encode_int32(_msg.visibility));
+        }
         return result;
     }
 }
