@@ -27,9 +27,6 @@ contract BucketFactory is Initializable{
     address public  sp_address_testnet;
     address public  greenfield_executor;
 
-    uint256 public callbackGasLimit;
-    uint8   public failureHandlerStrategy;
-
     string public version;
     address public admin;
     
@@ -46,9 +43,7 @@ contract BucketFactory is Initializable{
         address _bucket_hub,
         address _permission_hub,
         address _sp_address_testnet,
-        address _greenfield_executor,
-        uint256 _callbackGasLimit,
-        uint8   _failureHandlerStrategy
+        address _greenfield_executor
     ) public initializer{
         bucketRegistry = _bucketRegistry;
         schemaRegistry = _schemaRegistry;
@@ -59,8 +54,6 @@ contract BucketFactory is Initializable{
         sp_address_testnet = _sp_address_testnet;
         greenfield_executor = _greenfield_executor;
 
-        callbackGasLimit = _callbackGasLimit;
-        failureHandlerStrategy = _failureHandlerStrategy;
         admin = msg.sender;
     }
 
@@ -84,8 +77,6 @@ contract BucketFactory is Initializable{
             permission_hub,
             sp_address_testnet,
             greenfield_executor,
-            callbackGasLimit,
-            failureHandlerStrategy,
             version
         );
         emit CreateBucketManager(msg.sender, address(bucketManager));
@@ -105,8 +96,6 @@ contract BucketFactory is Initializable{
             permission_hub,
             sp_address_testnet,
             greenfield_executor,
-            callbackGasLimit,
-            failureHandlerStrategy,
             version)));
     }
 
