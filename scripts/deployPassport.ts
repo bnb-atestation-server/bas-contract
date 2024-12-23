@@ -1,7 +1,9 @@
 import  {ethers,upgrades} from "hardhat";
-import {AttestorResolver__factory} from "../typechain-types/factories/contracts/resolver/AttestorResolver__factory"
+import  {AttestorResolver__factory} from "../typechain-types/factories/contracts/resolver/AttestorResolver__factory"
 import  {Passport__factory} from "../typechain-types/factories/contracts/Passport.sol"
+import {EIP712Proxy__factory} from "../typechain-types/factories/contracts/eip712/proxy/EIP712Proxy__factory"
 import {AttestationRequestStruct} from "../typechain-types/contracts/Passport.sol/Passport"
+import {DelegatedProxyAttestationRequestStruct,SignatureStruct,AttestationRequestDataStruct} from "../typechain-types/contracts/eip712/proxy/EIP712Proxy"
 import {
     deployFactory,
     setFactoryAddressForRegistry,
@@ -24,6 +26,22 @@ import { AbiCoder }  from "ethers";
 import initSchema from "./3-initSchema";
 import deployRegistry from "./1-registrySchema";
 import deployEAS from "./2-eas";
+
+async function getVerifierDomain(verifierAddr:string) {
+    const [signer] = await ethers.getSigners();
+    const verifier =  EIP712Proxy__factory.connect(verifierAddr, signer);
+    const domain = await verifier.eip712Domain()
+    console.log(`domain is ${domain}`)
+    
+}
+
+async function verify(verifierAddr:string,req: DelegatedProxyAttestationRequestStruct) {
+    const [signer] = await ethers.getSigners();
+    const verifier =  EIP712Proxy__factory.connect(verifierAddr, signer);
+
+    const resp = await verifier.verifyAttestation(req)
+    console.log(`verify result is ${resp}`)
+}
 
 async function upgradePassport(passportAddr:string) {
     const [signer] = await ethers.getSigners();
@@ -229,12 +247,33 @@ async function main() {
     await ownership(manager)
     // await getControlledManagers(bucketRegistry,passport)
 
-    // await upgradePassport(passport)
+    await upgradePassport(passport)
     // sleep(240)
     // await updateResolverAttestor(resolver,passport)
     // sleep(240)
 
     // await mintPassport(passport,schemaIds[0],signer.address,false,createBucketFee,1n,invite_codes[0])
+
+    // await getVerifierDomain(verifier)
+    // const req: DelegatedProxyAttestationRequestStruct = {
+    //     schema: "0x99d156b98024cb8cc4c9ec0dce649a1973c9365c284341e940f082a3b5ca7e50",
+    //       data: {
+    //         recipient: "0x471543A3bd04486008c8a38c5C00543B73F1769e",
+    //         expirationTime: 0,
+    //         revocable: false,
+    //         refUID: "0x0000000000000000000000000000000000000000000000000000000000000000",
+    //         data: "0x0000000000000000000000000000000000000000000000000000000000000001",
+    //         value: 0
+    //       },
+    //       signature: {
+    //         v: 28,
+    //         r: "0x8d1b9964f7af57d009452d2baf355ff78ebccb5cb88353a97332e217dc624870",
+    //         s: "0x1400237f5a2340aec25c4fa455d330145ffc4c3ef2895987ccecf81c65e60b7d"
+    //       },
+    //       attester: "0x471543A3bd04486008c8a38c5C00543B73F1769e",
+    //       deadline: 1734953580
+    // }
+    // await verify(verifier,req)
 }
 
 main().catch((error) => {
