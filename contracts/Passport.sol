@@ -9,9 +9,9 @@ import {AttestationRequest} from "./IEAS.sol";
 import {DelegatedProxyAttestationRequest} from "./eip712/proxy/EIP712Proxy.sol";
 import { Address } from "@openzeppelin/contracts/utils/Address.sol";
 
-
 interface IManager{
    function transferOwnership(address newOwner) external;
+   function controlledManagerAmount(address controller) external view returns (uint256);
 }
 
 interface IBucketRegistry{
@@ -27,10 +27,6 @@ interface IVerifier {
     function verifyAttestation(DelegatedProxyAttestationRequest memory request) external returns (bool);
 }
 
-interface Manager {
-    function transferOwnership(address newOwner) external;
-}
-
 enum AttestationType{
     ONCHAIN,
     OFFCHAIN
@@ -40,19 +36,16 @@ struct AttestResult {
     bytes32 schemaId;
     AttestationType _type;
 }
-   
 
 contract Passport is Initializable, OwnableUpgradeable{
     using Address for address payable;
     // using EnumerableSet for EnumerableSet.AddressSet;
-
 
     uint256 public createBucketFee;
     uint256 public bank;
     IBAS public bas;
     IBucketRegistry public bucketRegistry;
     IVerifier public verifier;
-
     bytes32 public passport;
 
     mapping(address=>AttestationType) public mint_passport;
@@ -63,13 +56,11 @@ contract Passport is Initializable, OwnableUpgradeable{
     mapping(uint256=>address[]) public invite_code_users;
     mapping(uint256=>uint256) public invite_code_incomes;
 
-    mapping(bytes32=>uint256)mint_fees;
-    mapping(bytes32=>address)validate_attestors;
-
-
+    mapping(bytes32=>uint256) public mint_fees;
+    mapping(bytes32=>address)public validate_attestors;
     
-    event MintOffChainPassport(address indexed recipient);
-    event MintOffChain(address indexed recipient,bytes32 schemaId,DelegatedProxyAttestationRequest request);
+    event MintPassport(address indexed recipient, AttestationType indexed passportType, uint256 indexed discount);
+    event MintOffChain(address indexed recipient,bytes32,DelegatedProxyAttestationRequest request);
 
     function initialize(IBAS _bas,uint256 _createBucketFee,bytes32 _passport, IVerifier _verifier,IBucketRegistry _bucketRegistry) public initializer {
         __Ownable_init();
@@ -78,7 +69,6 @@ contract Passport is Initializable, OwnableUpgradeable{
         passport = _passport;
         verifier = _verifier;
         bucketRegistry = _bucketRegistry;
-
     }
 
     function setInviteCode(uint256[] calldata invite_code, uint256[] calldata _invite_code_discount ) external onlyOwner {
@@ -111,7 +101,6 @@ contract Passport is Initializable, OwnableUpgradeable{
         createBucketFee = _createBucketFee;
     }
 
-
     function withdraw(uint256 amount,address to) external onlyOwner(){
         if (amount > 0) {
             payable(to).sendValue(amount);
@@ -132,7 +121,8 @@ contract Passport is Initializable, OwnableUpgradeable{
     *      It may revert if the invite code is invalid or if the attestation type is not supported.
     */
     function mintPassport(AttestationRequest calldata request, AttestationType _type, uint256 invite_code) external payable {
-        require(invite_code== 0 || invite_code_discount[invite_code] > 0,"invalid invite code");
+        uint256 discount = invite_code_discount[invite_code];
+        require(invite_code== 0 || discount > 0,"invalid invite code");
         bytes32 schemaId = request.schema;
         require(schemaId == passport,"invalid schema id");
         bas.attest(request);
@@ -140,14 +130,13 @@ contract Passport is Initializable, OwnableUpgradeable{
         if(_type == AttestationType.OFFCHAIN){
              require(msg.value >= createBucketFee,"insufficient fund");
              bank += (msg.value);
-             emit MintOffChainPassport(request.data.recipient);
              uint256 managerAmount = bucketRegistry.controlledManagerAmount(address(this));
              require(managerAmount != 0,"bucker has been sold out, try later again please");
              address manager = bucketRegistry.getBucketManagerAt(address(this), 0);
              IManager(manager).transferOwnership(request.data.recipient);
         }
 
-       
+        emit MintPassport(request.data.recipient,_type,discount);
         mint_passport[request.data.recipient] = _type;
         if (invite_code != 0) {
             user_invited_codes[request.data.recipient] = invite_code;
@@ -160,27 +149,28 @@ contract Passport is Initializable, OwnableUpgradeable{
         verifier.verifyAttestation(request);
         bytes32 schemaId = request.schema;
         uint256 mint_fee = mint_fees[schemaId];
-        require(mint_fee > 0, "invalid schema");
+        // require(mint_fee > 0, "invalid schema");
         address recipient = request.data.recipient;
         uint256 invite_code = user_invited_codes[recipient];
         if (invite_code != 0) {
             uint256 discount = invite_code_discount[invite_code];
             require(discount > 0, "Invalid discount");
-            mint_fee = mint_fee * 10 / discount;
+            mint_fee = mint_fee * discount / 10;
             invite_code_incomes[invite_code] += mint_fee;
         }
         
-        require(msg.value >= mint_fee);
+        require(msg.value >= mint_fee,"insufficient fund");
         if (msg.value > mint_fee) {
             payable(msg.sender).sendValue(msg.value - mint_fee);
         }
 
         address validate_attestor = validate_attestors[schemaId];
-        require(validate_attestor == address(0) || validate_attestor == request.attester,"invalid attestor");
+        require(validate_attestor == request.attester,"invalid attestor");
 
         if (_type==AttestationType.ONCHAIN) {
             bas.attest(AttestationRequest({ schema: request.schema, data: request.data }));
         } else{
+            require(bucketRegistry.controlledManagerAmount(recipient) > 0, "recipient doesn't have bucker manager");
             emit MintOffChain(recipient, request.schema, request);
         }
         mint_result[recipient].push(AttestResult(schemaId, _type));

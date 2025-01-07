@@ -49,7 +49,6 @@ contract BucketManager is Ownable {
     mapping(bytes32 => Status) policies;
     bytes32 addressBytes32;
 
-
     function _getName(string memory name, bytes32 schemaId) internal view returns (string memory){
         bytes memory nameBytes = bytes(name);
         require(nameBytes.length < 18 && nameBytes.length > 0, "length of name should < 18 and > 0");

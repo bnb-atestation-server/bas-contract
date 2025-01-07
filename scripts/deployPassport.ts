@@ -15,13 +15,13 @@ import {
     getPolicyStatus,
     getControlledManagers,
     hashPolicy,
-    ownership
+    ownership,
+    getControlledManagerAmount
 }from "./bucket/deploy"
 
 
-
 import  {SCHEMAS,getSchemaUID,NO_EXPIRATION,ZERO_BYTES32,EIP712_BNB_DOMAIN_NAME} from "./utils";
-import { AbiCoder }  from "ethers";
+import { AbiCoder, ZeroAddress }  from "ethers";
 
 import initSchema from "./3-initSchema";
 import deployRegistry from "./1-registrySchema";
@@ -50,6 +50,31 @@ async function upgradePassport(passportAddr:string) {
     resp.waitForDeployment()
     console.log(`upgrade passport at tx ${resp.hash}`)
 
+}
+
+async function mint(passportAddr:string, req: DelegatedProxyAttestationRequestStruct,value: bigint,_type:bigint) {
+    const [signer] = await ethers.getSigners();
+    const passport = Passport__factory.connect(passportAddr,signer)
+
+    const resp = await passport.mint(req,_type,{value})
+    resp.wait()
+    console.log(`mint at tx ${resp.hash}`)
+}
+
+async function getMintFee(passportAddr:string,schema:string) {
+    const [signer] = await ethers.getSigners();
+    const passport = Passport__factory.connect(passportAddr,signer)
+
+    const resp = await passport.mint_fees(schema)
+    console.log(`mint fee of ${schema} is ${resp}`)
+}
+
+async function getValidateAttestors(passportAddr:string,schema:string) {
+    const [signer] = await ethers.getSigners();
+    const passport = Passport__factory.connect(passportAddr,signer)
+
+    const resp = await passport.validate_attestors(schema)
+    console.log(`validate attestor of ${schema} is ${resp}`)
 }
 
 async function mintPassport(passportAddr:string,schemaId :string,to:string,revocable:boolean,createBucketFee:bigint,attestationType:bigint,invite_code: bigint) {
@@ -144,12 +169,12 @@ async function setPassportSchema(passportAddr : string,schemaId:string) {
     console.log(`set passport schema in tx ${resp.hash}`);
 }
 
-function getSchemaIdAndPoint(resolver: string) {
+function getSchemaIdAndPoint(resolver: string,revocable: boolean) {
     var schemaIds = new Array()
     var points = new Array()
     var validators = new Array()
     for (const {schema,point,validator} of SCHEMAS) {
-        schemaIds.push(getSchemaUID(schema,resolver,true))
+        schemaIds.push(getSchemaUID(schema,resolver,revocable))
         points.push(BigInt(point))
         validators.push(validator)
     }
@@ -169,6 +194,9 @@ async function updateResolverAttestor(resolverAddr: string, validateAttestor: st
 //     const passport = Passport__factory.connect(passportAddr,signer)
 //     passport.
 // }
+
+
+
 
 async function sleep(seconds: number) {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
@@ -195,10 +223,7 @@ async function main() {
 
     // const invite_codes  = [1n,2n]
     // await setInviteCode(passport,invite_codes,[3n,6n])
-
     
-
-
     //bsc testnet
     console.log('Deploy contract with account:',signer.address);
     
@@ -223,12 +248,42 @@ async function main() {
     const resolver = "0xfBcc5d0a58a866c66a4523f6369dd16DFE658236"
     // await initSchema(registry,resolver,true)
 
-    const [schemaIds, points, validator] = getSchemaIdAndPoint(resolver)
+    const [schemaIds, points, validator] = getSchemaIdAndPoint(resolver,true)
+    // console.log(schemaIds,points, validator)
     // await setPassportSchema(passport,schemaIds[0])
 
-    const invite_codes  = [1n,2n]
     // await setInviteCode(passport,invite_codes,[3n,6n])
+    await setMintFee(passport,schemaIds,points,validator)
+    // sleep(20)
 
+    // console.log(schemaIds, points, validator)
+    const req :DelegatedProxyAttestationRequestStruct=  {
+        schema: '0x271b951e9e9851b0d1a6054c6ba21df0b73e37577f6f0f762e8d17c2d8cfe7b1',
+        data: {
+          recipient: '0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345',
+          expirationTime: 0,
+          revocable: false,
+          refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          data: '0xcc3ac5e6763de7e2838f580eed3a18cddecb615e4ff41d75fd04cb83924914c70000000000000000000000000000000000000000000000000000000000000080c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000034f4b580000000000000000000000000000000000000000000000000000000000',
+          value: 0,
+        },
+        signature: {
+          v: 27,
+          r: '0x23a831f7ac6cc50e04fe50849d651312cac1733f33f5c4dabfb696aa2eba4261',
+          s: '0x42ad0036f3bb382d340bdd8f7aea8afbbdc654ea31d9d4c1f0f099ba9cbcf21d',
+        },
+        attester: '0x471543A3bd04486008c8a38c5C00543B73F1769e',
+        deadline: 1735327432,
+      }
+
+    await getMintFee(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
+    await getValidateAttestors(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
+    await getValidateAttestors(passport,"0x271b951e9e9851b0d1a6054c6ba21df0b73e37577f6f0f762e8d17c2d8cfe7b1")
+
+    // await mint(passport,req,points[1],1n)
+
+
+    
     const salt = ethers.hashMessage("12")
     const name = "bascan"
 
@@ -244,10 +299,11 @@ async function main() {
     // await getPolicyStatus(manager,policyHash1)
     
     // await transferOwnership(manager,passport)
-    await ownership(manager)
+    // await ownership(manager)
     // await getControlledManagers(bucketRegistry,passport)
+    // await getControlledManagerAmount(bucketRegistry,"0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345")
 
-    await upgradePassport(passport)
+    // await upgradePassport(passport)
     // sleep(240)
     // await updateResolverAttestor(resolver,passport)
     // sleep(240)
@@ -255,24 +311,24 @@ async function main() {
     // await mintPassport(passport,schemaIds[0],signer.address,false,createBucketFee,1n,invite_codes[0])
 
     // await getVerifierDomain(verifier)
-    // const req: DelegatedProxyAttestationRequestStruct = {
-    //     schema: "0x99d156b98024cb8cc4c9ec0dce649a1973c9365c284341e940f082a3b5ca7e50",
-    //       data: {
-    //         recipient: "0x471543A3bd04486008c8a38c5C00543B73F1769e",
-    //         expirationTime: 0,
-    //         revocable: false,
-    //         refUID: "0x0000000000000000000000000000000000000000000000000000000000000000",
-    //         data: "0x0000000000000000000000000000000000000000000000000000000000000001",
-    //         value: 0
-    //       },
-    //       signature: {
-    //         v: 28,
-    //         r: "0x8d1b9964f7af57d009452d2baf355ff78ebccb5cb88353a97332e217dc624870",
-    //         s: "0x1400237f5a2340aec25c4fa455d330145ffc4c3ef2895987ccecf81c65e60b7d"
-    //       },
-    //       attester: "0x471543A3bd04486008c8a38c5C00543B73F1769e",
-    //       deadline: 1734953580
-    // }
+    // const req :DelegatedProxyAttestationRequestStruct=  {
+    //     schema: '0x271b951e9e9851b0d1a6054c6ba21df0b73e37577f6f0f762e8d17c2d8cfe7b1',
+    //     data: {
+    //       recipient: '0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345',
+    //       expirationTime: 0,
+    //       revocable: false,
+    //       refUID: '0x0000000000000000000000000000000000000000000000000000000000000000',
+    //       data: '0xcc3ac5e6763de7e2838f580eed3a18cddecb615e4ff41d75fd04cb83924914c70000000000000000000000000000000000000000000000000000000000000080c89efdaa54c0f20c7adf612882df0950f5a951637e0307cdcb4c672f298b8bc6000000000000000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000000000000000000000034f4b580000000000000000000000000000000000000000000000000000000000',
+    //       value: 0,
+    //     },
+    //     signature: {
+    //       v: 27,
+    //       r: '0x23a831f7ac6cc50e04fe50849d651312cac1733f33f5c4dabfb696aa2eba4261',
+    //       s: '0x42ad0036f3bb382d340bdd8f7aea8afbbdc654ea31d9d4c1f0f099ba9cbcf21d',
+    //     },
+    //     attester: '0x471543A3bd04486008c8a38c5C00543B73F1769e',
+    //     deadline: 1735327432,
+    //   }
     // await verify(verifier,req)
 }
 

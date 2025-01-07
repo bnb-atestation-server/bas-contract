@@ -276,6 +276,14 @@ export async function sleep(seconds: number) {
     return new Promise((resolve) => setTimeout(resolve, seconds * 1000));
 }
 
+export async function getControlledManagerAmount(_registry: string, controller: string) {
+    const [signer] = await ethers.getSigners();
+    const registry = BucketRegistry__factory.connect(_registry,signer)
+
+    const amount = await registry.controlledManagerAmount(controller)
+    console.log(`Amount of Bucket Managers controlled by ${controller} is ${amount}`)
+}
+
 export async function getControlledManagers(_registry: string, controller: string) {
     const [signer] = await ethers.getSigners();
     const registry = BucketRegistry__factory.connect(_registry,signer)

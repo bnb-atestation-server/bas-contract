@@ -1,7 +1,38 @@
 import { ZeroAddress,solidityPackedKeccak256 }  from  "ethers";
 
 export const SCHEMAS = [
-  {schema: 'bool passport',name: 'BNB Passport',point: 1_000_000,validator: '0x0000000000000000000000000000000000000000'}
+  //passport 
+  // {schema: 'bool passport',name: 'BNB Passport',point: 1_000_000,validator: '0x0000000000000000000000000000000000000000'}
+  // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnKYCUser",name:"BN KYC User", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool okxKYCUser",name:"OKX KYC Account", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bybitKYCUser",name:"Bybit KYC Account", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool coinbaseKYCUser",name:"Coinbase KYC User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool upbitKYCUser",name:"Upbit KYC User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bithumbKYCUser",name:"Bitthumb KYC User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "uint256 BNBBalanceOnBSC,uint256 activity",name:"BSC Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "uint256 ETHBalanceOnETH,uint256 activity",name:"ETH Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "uint256 ETHBalanceOnOp,uint256 activity",name:"OP Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "uint256 ETHBalanceOnBase",name:"BASE Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+ 
+
+  {schema: "bool virtual_creator",name:"Virtual Token Creator", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool clanker_creator",name:"Clanker Token Creator", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool luna_holder",name:"Luna Holder", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool aixpt_holder",name:"AIXPT Holder", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool ai16z_holder",name:"AI16Z Holder", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "bool facarter_user",name:"Facaster User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool create_opensocial_profile",name:"OpenSocial Profile", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "bool twitter_user",name:"Twitter User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool telegram_user",name:"Telegram User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool hasDotBNBDomain",name:"SpaceId User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool hasDotETHDomain",name:"ENS User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "string PancakeV3VolumeWithIn3M",name:"Pancake V3 Volume Within 3 Months", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string PancakeV2VolumeWithIn3M",name:"Pancake V2 Volume Within 3 Months", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
   // { schema: 'string verifiedCountry', name: 'Verified Coinbase Country'},
   // { schema: 'bool verifiedAccount', name: 'Verified Coinbase Account' }
 
@@ -11,12 +42,12 @@ export const SCHEMAS = [
     // { schema: 'bytes32 schemaId,[]string attestor', name: 'Valid Schema Attestors' },
 
     // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnSpotVolumeLe100U",name:"BN Spot Volume > 100U", point: 200},
-    // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnKYCUser",name:"BN KYC User", point: 100},
+    // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnKYCUser",name:"BN KYC User", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
     // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnBalanceLe100U",name:"BN Balance > 100U", point: 200},
     // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnFirstTxWithinOneWeek",name:"BN First Tx Within OneWeek", point: 300},
-    // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool okxKYCUser",name:"OKX KYC Account", point: 100},
-    // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bybitKYCUser",name:"Bybit KYC Account", point: 100},
+    // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool okxKYCUser",name:"OKX KYC Account", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
 
+    
     // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool followBNBChainTwitter",name:"Follow BNB Chain Twitter", point: 50},
     // {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool followBASTwitter",name:"Follow BAS Twitter", point: 50},
     // {schema: "bool bnbOnChainLe1",name:"BNB on Chain > 1", point: 100},
@@ -146,6 +177,38 @@ export const SCHEMAS = [
     // { schema: 'bool gm', name: 'GM' }
   ];
 
+export const PASSPORTSCHEMA = [
+  {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bnKYCUser",name:"BN KYC User", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool okxKYCUser",name:"OKX KYC Account", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bybitKYCUser",name:"Bybit KYC Account", point: 0,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool coinbaseKYCUser",name:"Coinbase KYC User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool upbitKYCUser",name:"Upbit KYC User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bytes32 uHash,string source,bytes32 publicDataHash,bool bithumbKYCUser",name:"Bitthumb KYC User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "string chain,uint256 balance,uint256 activity",name:"BSC Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string chain,uint256 balance,uint256 activity",name:"ETH Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string chain,uint256 balance,uint256 activity",name:"OP Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string chain,uint256 balance",name:"BASE Activities", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+
+  {schema: "string domain",name:"SpaceId User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string domain",name:"ENS User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+ 
+
+  {schema: "bool virtual_creator",name:"Virtual Token Creator", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool clanker_creator",name:"Clanker Token Creator", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool luna_holder",name:"Luna Holder", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool aixpt_holder",name:"AIXPT Holder", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool ai16z_holder",name:"AI16Z Holder", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "bool facarter_user",name:"Facaster User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+  {schema: "bool twitter_user",name:"Twitter User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "bool telegram_user",name:"Telegram User", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string domain", name:"ENS", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+  {schema: "string domain", name:"SpaceID", point: 100,validator: '0x471543A3bd04486008c8a38c5C00543B73F1769e'},
+
+]
 
 export const ZERO_ADDRESS = ZeroAddress;
 export const ZERO_BYTES = '0x';
