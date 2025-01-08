@@ -253,7 +253,7 @@ async function main() {
     // await setPassportSchema(passport,schemaIds[0])
 
     // await setInviteCode(passport,invite_codes,[3n,6n])
-    await setMintFee(passport,schemaIds,points,validator)
+    // await setMintFee(passport,schemaIds,points,validator)
     // sleep(20)
 
     // console.log(schemaIds, points, validator)
@@ -276,9 +276,9 @@ async function main() {
         deadline: 1735327432,
       }
 
-    await getMintFee(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
-    await getValidateAttestors(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
-    await getValidateAttestors(passport,"0x271b951e9e9851b0d1a6054c6ba21df0b73e37577f6f0f762e8d17c2d8cfe7b1")
+    // await getMintFee(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
+    // await getValidateAttestors(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
+
 
     // await mint(passport,req,points[1],1n)
 
@@ -288,7 +288,7 @@ async function main() {
     const name = "bascan"
 
     // const manager = await deployBucketManager(factory,salt,"0.001")
-    const manager = "0xA74fB86836BE2822a95Cf6cC39b5Dbba06f1FCfC"
+    const manager = "0xA3Ee175AD45f560C7a54Fa5eF58fc02E92Bb3cB7"
     // await createBucket(manager,name,ZERO_BYTES32)
      // await sleep(60)
     // await getBucketStatus(manager,name,ZERO_BYTES32)
@@ -300,7 +300,7 @@ async function main() {
     
     // await transferOwnership(manager,passport)
     // await ownership(manager)
-    // await getControlledManagers(bucketRegistry,passport)
+    await getControlledManagers(bucketRegistry,"0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345")
     // await getControlledManagerAmount(bucketRegistry,"0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345")
 
     // await upgradePassport(passport)
