@@ -63,7 +63,7 @@ const config: HardhatUserConfig = {
     apiKey: {
         bsc:API_KEY,
         opBNB:API_KEY,
-        "opBNB-test":API_KEY
+        "bnb-test":API_KEY
     },
     customChains: [
       {

@@ -18,7 +18,8 @@ import {
     ownership,
     getControlledManagerAmount,
     getManagerName,
-    getExecDataStr
+    getExecDataStr,
+    deployRegistry as deployBucketRegistry
 }from "./bucket/deploy"
 
 
@@ -238,8 +239,8 @@ async function main() {
 
     const createBucketFee = 1000n
 
-    // const verifier = await deployVerifier(bas,EIP712_BNB_DOMAIN_NAME)
-    const verifier = "0x14Cd63ff4501fdE53647b81519916cc52456a31B"
+    const verifier = await deployVerifier(bas,EIP712_BNB_DOMAIN_NAME)
+    // const verifier = "0x14Cd63ff4501fdE53647b81519916cc52456a31B"
 
     // const passport = await deployPassport(bas,createBucketFee,ZERO_BYTES32,verifier,bucketRegistry)
     const passport = "0x63e7C33db44F3a14d27fd3E42B88FD8Cf6a5c953"
@@ -253,7 +254,7 @@ async function main() {
     // await setPassportSchema(passport,schemaIds[0])
 
     // await setInviteCode(passport,invite_codes,[3n,6n])
-    // await setMintFee(passport,schemaIds,points,validator)
+    await setMintFee(passport,schemaIds,points,validator)
     // sleep(20)
 
     // console.log(schemaIds, points, validator)
@@ -276,7 +277,7 @@ async function main() {
         deadline: 1735327432,
       }
 
-    // await getMintFee(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
+    await getMintFee(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
     // await getValidateAttestors(passport,"0xb2a5316263c9817f949b98d30ed1c83df6a7a744995980eab11152f7cf35e9b6")
 
 
@@ -290,16 +291,16 @@ async function main() {
     // await getManagerName(factory,"yitiaodaheb")
     // const manager = await deployBucketManager(factory,salt,"0.001")
     const manager = "0x7a09dc2c23c0b15f55a560910be37314a4b8f00f"
-    await createBucket(manager,name,ZERO_BYTES32)
+    // await createBucket(manager,name,ZERO_BYTES32)
 
 
-     await sleep(60)
-    await getBucketStatus(manager,name,ZERO_BYTES32)
+    //  await sleep(60)
+    // await getBucketStatus(manager,name,ZERO_BYTES32)
    
-    const policyHash1 = await createPolicy(manager,signer.address,name,ZERO_BYTES32)
-    await sleep(60)
+    // const policyHash1 = await createPolicy(manager,signer.address,name,ZERO_BYTES32)
+    // await sleep(60)
     // const policyHash1 = await hashPolicy(manager,signer.address,name,ZERO_BYTES32)
-    await getPolicyStatus(manager,policyHash1)
+    // await getPolicyStatus(manager,policyHash1)
     
     // await transferOwnership(manager,passport)
     // await ownership(manager)
