@@ -16,7 +16,9 @@ import {
     getControlledManagers,
     hashPolicy,
     ownership,
-    getControlledManagerAmount
+    getControlledManagerAmount,
+    getManagerName,
+    getExecDataStr
 }from "./bucket/deploy"
 
 
@@ -48,8 +50,6 @@ async function upgradePassport(passportAddr:string) {
     const Passport =  await ethers.getContractFactory("Passport",signer);
     const resp = await upgrades.upgradeProxy(passportAddr, Passport)
     resp.waitForDeployment()
-    console.log(`upgrade passport at tx ${resp.hash}`)
-
 }
 
 async function mint(passportAddr:string, req: DelegatedProxyAttestationRequestStruct,value: bigint,_type:bigint) {
@@ -287,20 +287,23 @@ async function main() {
     const salt = ethers.hashMessage("12")
     const name = "bascan"
 
+    // await getManagerName(factory,"yitiaodaheb")
     // const manager = await deployBucketManager(factory,salt,"0.001")
-    const manager = "0xA3Ee175AD45f560C7a54Fa5eF58fc02E92Bb3cB7"
-    // await createBucket(manager,name,ZERO_BYTES32)
-     // await sleep(60)
-    // await getBucketStatus(manager,name,ZERO_BYTES32)
+    const manager = "0x7a09dc2c23c0b15f55a560910be37314a4b8f00f"
+    await createBucket(manager,name,ZERO_BYTES32)
+
+
+     await sleep(60)
+    await getBucketStatus(manager,name,ZERO_BYTES32)
    
-    // const policyHash1 = await createPolicy(manager,signer.address,name,ZERO_BYTES32)
-    // await sleep(60)
+    const policyHash1 = await createPolicy(manager,signer.address,name,ZERO_BYTES32)
+    await sleep(60)
     // const policyHash1 = await hashPolicy(manager,signer.address,name,ZERO_BYTES32)
-    // await getPolicyStatus(manager,policyHash1)
+    await getPolicyStatus(manager,policyHash1)
     
     // await transferOwnership(manager,passport)
     // await ownership(manager)
-    await getControlledManagers(bucketRegistry,"0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345")
+    // await getControlledManagers(bucketRegistry,"0x471543A3bd04486008c8a38c5C00543B73F1769e")
     // await getControlledManagerAmount(bucketRegistry,"0x5C33f9bAFcC7e1347937e0E986Ee14e84A6DF345")
 
     // await upgradePassport(passport)

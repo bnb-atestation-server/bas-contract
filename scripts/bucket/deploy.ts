@@ -123,6 +123,14 @@ export async function deployBucketManager(_factory: string,salt: string, _transf
     return _bucketManager
 }
 
+export async function getManagerName(_factory: string,salt: string) {
+    const [signer] = await ethers.getSigners();
+    
+    const factory = BucketFactory__factory.connect(_factory,signer)
+    const _bucketManager = await factory.getManagerAddress(salt);
+    console.log("deploy manager:", _bucketManager)
+}
+
 export async function createBucket(_bucketManager: string, name: string, schemaId:string) {
     const GRPC_URL = 'https://gnfd-testnet-fullnode-tendermint-us.bnbchain.org';
     const GREEN_CHAIN_ID = 'greenfield_5600-1';
@@ -278,8 +286,18 @@ export async function sleep(seconds: number) {
 
 export async function getControlledManagerAmount(_registry: string, controller: string) {
     const [signer] = await ethers.getSigners();
+
+    if (!ethers.isAddress(_registry)) {
+        console.error(`Invalid contract address: ${_registry}`);
+        return;
+    }
+
     const registry = BucketRegistry__factory.connect(_registry,signer)
 
+    if (!registry.controlledManagerAmount) {
+        console.error('Method "controlledManagerAmount" not found on the contract.');
+        return;
+    }
     const amount = await registry.controlledManagerAmount(controller)
     console.log(`Amount of Bucket Managers controlled by ${controller} is ${amount}`)
 }
